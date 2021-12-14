@@ -1,0 +1,48 @@
+version: "3.2"
+
+services:
+  service-db-postgres:
+    image: service-db-postgres:1.0.0
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: uvicorn app.main:app --reload --workers 1 --host 0.0.0.0 --port 80
+    volumes:
+      - ./:/usr/src/app/
+    ports:
+      - 8001:80
+      - 10002:10002
+    depends_on:
+      - db-postgres
+    environment:
+      - WEB_APP_VERSION=0.0.1
+      - WEB_APP_TITLE=service DB
+      - WEB_APP_DESCRIPTION=Microservice for seed DB
+      - DATABASE=postgres://postgres:postgres@db-postgres/guane_db
+      - ENVIRONMENT=dev
+      - DEBUGGER=True
+    networks:
+      - guane
+
+  db-postgres:
+    image: db-postgres:1.0.0
+    build:
+      context: ./db
+      dockerfile: Dockerfile
+    ports:
+      - "5434:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - db_postgres:/var/lib/postgresql/data
+    networks:
+      - guane
+
+volumes:
+  db_postgres:
+    external: true
+
+networks:
+  guane:
+    external: true
